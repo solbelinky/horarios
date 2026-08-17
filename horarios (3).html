@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horarios — Di Tella</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#15181A;
+    --ink-2:#1D2224;
+    --paper:#F6F2E7;
+    --paper-dim:#E9E3D3;
+    --teal:#2F8F7A;
+    --teal-d:#1B5346;
+    --coral:#E3572B;
+    --coral-d:#7A2C13;
+    --amber:#E8B23D;
+    --amber-d:#7A5714;
+    --line:rgba(246,242,231,0.14);
+    --line-strong:rgba(246,242,231,0.28);
+    --text-dim:rgba(246,242,231,0.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(rgba(21,24,26,0.86), rgba(21,24,26,0.86)),
+      url('leopardo.png') center/cover fixed no-repeat;
+    color:var(--paper);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:1120px;margin:0 auto;}
+
+  /* header */
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    flex-wrap:wrap;gap:16px;
+    margin-bottom:28px;
+    border-bottom:1px solid var(--line-strong);
+    padding-bottom:20px;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--teal);margin:0 0 6px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;font-size:38px;margin:0;letter-spacing:-0.01em;
+  }
+  .now-badge{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;color:var(--text-dim);
+    text-align:right;
+  }
+  .now-badge span{color:var(--paper);font-weight:500;}
+
+  /* add class panel */
+  .panel{
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:20px 22px;
+    margin-bottom:28px;
+  }
+  .panel-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;font-weight:700;
+    margin:0 0 16px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel-title::before{
+    content:'';display:inline-block;width:8px;height:8px;background:var(--coral);
+  }
+  form{
+    display:grid;
+    grid-template-columns:1.6fr 1fr 0.9fr 0.9fr 1fr auto;
+    gap:12px;
+    align-items:end;
+  }
+  @media (max-width:860px){
+    form{grid-template-columns:1fr 1fr;}
+  }
+  .field label{
+    display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--text-dim);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;
+  }
+  input,select{
+    width:100%;background:var(--ink);border:1px solid var(--line-strong);
+    color:var(--paper);padding:9px 10px;border-radius:3px;
+    font-family:'Inter',sans-serif;font-size:14px;
+  }
+  input:focus,select:focus{outline:none;border-color:var(--teal);}
+  input[type=color]{padding:3px;height:37px;cursor:pointer;}
+  .swatches{display:flex;gap:6px;align-items:center;}
+  .swatch{
+    width:22px;height:22px;border-radius:50%;cursor:pointer;
+    border:2px solid transparent;
+  }
+  .swatch.active{border-color:var(--paper);}
+  button.add-btn{
+    background:var(--teal);color:var(--ink);border:none;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+    padding:10px 18px;border-radius:3px;cursor:pointer;white-space:nowrap;
+    transition:opacity .15s;
+  }
+  button.add-btn:hover{opacity:0.85;}
+  .form-error{
+    grid-column:1/-1;color:var(--coral);font-size:12px;font-family:'IBM Plex Mono',monospace;
+    display:none;
+  }
+
+  /* grid board */
+  .board-title{
+    font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;
+    margin:0 0 14px;color:var(--text-dim);
+  }
+  .board{
+    position:relative;
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    overflow-x:auto;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:56px repeat(6,minmax(120px,1fr));
+    min-width:820px;
+  }
+  .corner{border-bottom:1px solid var(--line-strong);border-right:1px solid var(--line);}
+  .daycol-head{
+    padding:14px 8px;text-align:center;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;
+    border-bottom:1px solid var(--line-strong);
+    border-right:1px solid var(--line);
+    text-transform:uppercase;letter-spacing:0.04em;
+  }
+  .daycol-head.today{color:var(--amber);}
+  .hour-label{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text-dim);
+    text-align:right;padding:0 8px;border-right:1px solid var(--line);
+    position:relative;top:-6px;
+  }
+  .hour-row{border-bottom:1px solid var(--line);height:56px;}
+  .daycell{
+    position:relative;border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  }
+  .now-line{
+    position:absolute;left:0;right:0;height:2px;background:var(--amber);z-index:5;
+    pointer-events:none;
+  }
+  .now-line::before{
+    content:'';position:absolute;left:-4px;top:-3px;width:8px;height:8px;
+    border-radius:50%;background:var(--amber);
+  }
+  .class-block{
+    position:absolute;left:3px;right:3px;
+    border-radius:3px;padding:6px 8px;overflow:hidden;
+    cursor:pointer;
+    border-left:3px solid;
+    transition:transform .1s;
+  }
+  .class-block:hover{transform:scale(1.015);z-index:4;}
+  .class-materia{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;line-height:1.2;}
+  .class-meta{font-family:'IBM Plex Mono',monospace;font-size:10.5px;opacity:0.85;margin-top:2px;}
+
+  .empty-hint{
+    padding:40px 20px;text-align:center;color:var(--text-dim);
+    font-family:'IBM Plex Mono',monospace;font-size:13px;
+  }
+
+  /* delete confirm mini modal */
+  .modal-bg{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+    align-items:center;justify-content:center;z-index:50;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{
+    background:var(--ink-2);border:1px solid var(--line-strong);border-radius:6px;
+    padding:22px 24px;max-width:320px;width:90%;
+  }
+  .modal h3{font-family:'Space Grotesk',sans-serif;font-size:16px;margin:0 0 8px;}
+  .modal p{font-size:13px;color:var(--text-dim);margin:0 0 18px;line-height:1.5;}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+  .modal-actions button{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;
+    padding:8px 14px;border-radius:3px;cursor:pointer;border:1px solid var(--line-strong);
+    background:transparent;color:var(--paper);
+  }
+  .modal-actions button.danger{background:var(--coral);border-color:var(--coral);color:var(--ink);}
+
+  footer{
+    margin-top:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    color:var(--text-dim);text-align:center;
+  }
+
+  /* animal print */
+  .leopard-strip{
+    height:14px;
+    margin:-32px -20px 28px;
+    background:url('leopardo.png') center/220px auto repeat-x;
+    border-top:1px solid rgba(0,0,0,0.3);
+    border-bottom:1px solid rgba(0,0,0,0.3);
+  }
+  .swatch.leopard{
+    background:url('leopardo.png') center/60px auto;
+  }
+  .class-block.leopard-bg{
+    background:
+      linear-gradient(rgba(21,24,26,0.18), rgba(21,24,26,0.18)),
+      url('leopardo.png') center/140px auto !important;
+  }
+  .class-block.leopard-bg .class-materia,
+  .class-block.leopard-bg .class-meta{
+    color:#2A1B0A;
+    text-shadow:0 1px 2px rgba(246,242,231,0.5);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <p class="brand-eyebrow">Universidad Torcuato Di Tella</p>
+      <h1>Horarios</h1>
+    </div>
+    <div class="now-badge" id="nowBadge"></div>
+  </header>
+
+  <div class="leopard-strip"></div>
+
+  <div class="panel">
+    <p class="panel-title">Agregar materia</p>
+    <form id="classForm">
+      <div class="field">
+        <label for="materia">Materia</label>
+        <input type="text" id="materia" placeholder="Algoritmos y Estructuras de Datos" required>
+      </div>
+      <div class="field">
+        <label for="dia">Día</label>
+        <select id="dia">
+          <option value="0">Lunes</option>
+          <option value="1">Martes</option>
+          <option value="2">Miércoles</option>
+          <option value="3">Jueves</option>
+          <option value="4">Viernes</option>
+          <option value="5">Sábado</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="inicio">Desde</label>
+        <input type="time" id="inicio" value="09:00" required>
+      </div>
+      <div class="field">
+        <label for="fin">Hasta</label>
+        <input type="time" id="fin" value="10:30" required>
+      </div>
+      <div class="field">
+        <label for="aula">Aula</label>
+        <input type="text" id="aula" placeholder="Sede Almagro, aula 302">
+      </div>
+      <button type="submit" class="add-btn">+ Agregar</button>
+      <div class="form-error" id="formError"></div>
+    </form>
+  </div>
+
+  <p class="board-title">Semana</p>
+  <div class="board">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <footer>Los horarios se guardan automáticamente en este navegador.</footer>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3 id="modalTitle">Eliminar materia</h3>
+    <p id="modalBody">¿Seguro que querés eliminar esta materia de tu horario?</p>
+    <div class="modal-actions">
+      <button id="modalCancel">Cancelar</button>
+      <button id="modalDelete" class="danger">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const DAY_SHORT = ['LUN','MAR','MIÉ','JUE','VIE','SÁB'];
+const START_HOUR = 8;
+const END_HOUR = 22;
+const ROW_H = 56;
+const COLORS = [
+  {name:'teal', main:'#2F8F7A', dark:'#173F35', text:'#B9EBDE'},
+  {name:'coral', main:'#E3572B', dark:'#4A1B0C', text:'#F5C4B3'},
+  {name:'amber', main:'#E8B23D', dark:'#412402', text:'#FAC775'},
+  {name:'purple', main:'#7F77DD', dark:'#26215C', text:'#CECBF6'},
+  {name:'pink', main:'#D4537E', dark:'#4B1528', text:'#F4C0D1'},
+  {name:'leopard', main:'#D8A85C', dark:'#D8A85C', text:'#2A1B0A'},
+];
+let selectedColor = COLORS[0];
+let classes = [];
+let pendingDeleteId = null;
+
+const grid = document.getElementById('grid');
+const form = document.getElementById('classForm');
+const formError = document.getElementById('formError');
+const modalBg = document.getElementById('modalBg');
+
+function timeToMinutes(t){
+  const [h,m] = t.split(':').map(Number);
+  return h*60+m;
+}
+
+function buildGrid(){
+  grid.innerHTML = '';
+  grid.style.gridTemplateRows = `44px repeat(${END_HOUR-START_HOUR}, ${ROW_H}px)`;
+
+  const corner = document.createElement('div');
+  corner.className = 'corner';
+  grid.appendChild(corner);
+
+  const todayIdx = new Date().getDay() === 0 ? 6 : new Date().getDay()-1;
+  DAY_SHORT.forEach((d,i)=>{
+    const head = document.createElement('div');
+    head.className = 'daycol-head' + (i===todayIdx ? ' today' : '');
+    head.textContent = d;
+    grid.appendChild(head);
+  });
+
+  for(let h=START_HOUR; h<END_HOUR; h++){
+    const label = document.createElement('div');
+    label.className = 'hour-label';
+    label.textContent = h+':00';
+    grid.appendChild(label);
+    for(let d=0; d<6; d++){
+      const cell = document.createElement('div');
+      cell.className = 'hour-row daycell';
+      cell.dataset.day = d;
+      cell.dataset.hour = h;
+      grid.appendChild(cell);
+    }
+  }
+
+  placeClasses();
+  drawNowLine(todayIdx);
+}
+
+function placeClasses(){
+  document.querySelectorAll('.class-block').forEach(el=>el.remove());
+  classes.forEach(c=>{
+    const startMin = timeToMinutes(c.inicio);
+    const endMin = timeToMinutes(c.fin);
+    const top = ((startMin - START_HOUR*60)/60)*ROW_H;
+    const height = ((endMin-startMin)/60)*ROW_H;
+    const cell = document.querySelector(`.daycell[data-day="${c.dia}"][data-hour="${START_HOUR}"]`);
+    if(!cell) return;
+    const col = cell.closest('.grid');
+    const dayCells = document.querySelectorAll(`.daycell[data-day="${c.dia}"]`);
+    if(!dayCells.length) return;
+    const container = dayCells[0].parentElement;
+    const block = document.createElement('div');
+    block.className = 'class-block';
+    const color = COLORS.find(x=>x.name===c.color) || COLORS[0];
+    block.style.top = (44 + top) + 'px';
+    block.style.height = Math.max(height-2, 30) + 'px';
+    if(color.name === 'leopard'){
+      block.classList.add('leopard-bg');
+      block.style.borderLeftColor = '#1D2224';
+    }else{
+      block.style.background = color.dark;
+      block.style.borderLeftColor = color.main;
+      block.style.color = color.text;
+    }
+    block.style.gridColumn = String(c.dia+2);
+    block.innerHTML = `<div class="class-materia">${escapeHtml(c.materia)}</div>
+      <div class="class-meta">${c.inicio}–${c.fin}${c.aula ? ' · '+escapeHtml(c.aula) : ''}</div>`;
+    block.addEventListener('click', ()=>openDeleteModal(c.id, c.materia));
+    grid.appendChild(block);
+    block.style.position = 'absolute';
+    block.style.left = 'auto';
+    block.style.right = 'auto';
+    positionBlockInColumn(block, c.dia);
+  });
+}
+
+function positionBlockInColumn(block, dayIdx){
+  const headWidth = 56;
+  const gridEl = document.getElementById('grid');
+  const totalCols = 6;
+  const usableWidth = gridEl.clientWidth - headWidth;
+  const colWidth = usableWidth / totalCols;
+  block.style.left = (headWidth + dayIdx*colWidth + 3) + 'px';
+  block.style.width = (colWidth - 6) + 'px';
+}
+
+function drawNowLine(todayIdx){
+  document.querySelectorAll('.now-line').forEach(el=>el.remove());
+  const now = new Date();
+  const mins = now.getHours()*60 + now.getMinutes();
+  if(now.getHours() < START_HOUR || now.getHours() >= END_HOUR) return;
+  const top = 44 + ((mins - START_HOUR*60)/60)*ROW_H;
+  const line = document.createElement('div');
+  line.className = 'now-line';
+  line.style.top = top + 'px';
+  const headWidth = 56;
+  const usableWidth = grid.clientWidth - headWidth;
+  const colWidth = usableWidth/6;
+  line.style.left = (headWidth + todayIdx*colWidth) + 'px';
+  line.style.width = colWidth + 'px';
+  grid.appendChild(line);
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function updateNowBadge(){
+  const now = new Date();
+  const dayName = DAYS[now.getDay()===0 ? 5 : now.getDay()-1] || '';
+  const time = now.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('nowBadge').innerHTML = `${dayName} <span>${time}</span>`;
+}
+
+document.querySelectorAll('.swatch').forEach(s=>{});
+
+function buildSwatches(){
+  const wrap = document.createElement('div');
+  wrap.className = 'field swatches';
+  const label = document.createElement('label');
+  label.textContent = 'Color';
+  label.style.width = '100%';
+  const swWrap = document.createElement('div');
+  swWrap.className = 'swatches';
+  COLORS.forEach((c,i)=>{
+    const sw = document.createElement('div');
+    sw.className = 'swatch' + (i===0 ? ' active' : '') + (c.name==='leopard' ? ' leopard' : '');
+    if(c.name !== 'leopard') sw.style.background = c.main;
+    sw.addEventListener('click', ()=>{
+      selectedColor = c;
+      document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));
+      sw.classList.add('active');
+    });
+    swWrap.appendChild(sw);
+  });
+  const container = document.createElement('div');
+  container.className = 'field';
+  container.appendChild(label);
+  container.appendChild(swWrap);
+  document.getElementById('aula').closest('.field').after(container);
+}
+buildSwatches();
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  formError.style.display = 'none';
+  const materia = document.getElementById('materia').value.trim();
+  const dia = parseInt(document.getElementById('dia').value);
+  const inicio = document.getElementById('inicio').value;
+  const fin = document.getElementById('fin').value;
+  const aula = document.getElementById('aula').value.trim();
+
+  if(!materia){
+    formError.textContent = 'Ingresá el nombre de la materia.';
+    formError.style.display = 'block';
+    return;
+  }
+  if(timeToMinutes(fin) <= timeToMinutes(inicio)){
+    formError.textContent = 'El horario de fin tiene que ser posterior al de inicio.';
+    formError.style.display = 'block';
+    return;
+  }
+
+  const newClass = {
+    id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    materia, dia, inicio, fin, aula, color: selectedColor.name
+  };
+  classes.push(newClass);
+  await saveClasses();
+  buildGrid();
+  form.reset();
+  document.getElementById('inicio').value = '09:00';
+  document.getElementById('fin').value = '10:30';
+});
+
+function openDeleteModal(id, materia){
+  pendingDeleteId = id;
+  document.getElementById('modalBody').textContent = `¿Eliminar "${materia}" de tu horario?`;
+  modalBg.classList.add('show');
+}
+document.getElementById('modalCancel').addEventListener('click', ()=>{
+  modalBg.classList.remove('show');
+  pendingDeleteId = null;
+});
+document.getElementById('modalDelete').addEventListener('click', async ()=>{
+  classes = classes.filter(c=>c.id !== pendingDeleteId);
+  await saveClasses();
+  buildGrid();
+  modalBg.classList.remove('show');
+  pendingDeleteId = null;
+});
+
+async function saveClasses(){
+  try{
+    await window.storage.set('classes', JSON.stringify(classes));
+  }catch(err){
+    console.error('No se pudo guardar', err);
+  }
+}
+
+async function loadClasses(){
+  try{
+    const result = await window.storage.get('classes');
+    if(result && result.value){
+      classes = JSON.parse(result.value);
+    }
+  }catch(err){
+    classes = [];
+  }
+}
+
+async function init(){
+  await loadClasses();
+  buildGrid();
+  updateNowBadge();
+  setInterval(()=>{
+    updateNowBadge();
+    const todayIdx = new Date().getDay() === 0 ? 6 : new Date().getDay()-1;
+    drawNowLine(todayIdx);
+  }, 30000);
+  window.addEventListener('resize', ()=>{
+    placeClasses();
+    const todayIdx = new Date().getDay() === 0 ? 6 : new Date().getDay()-1;
+    drawNowLine(todayIdx);
+  });
+}
+init();
+</script>
+</body>
+</html>
